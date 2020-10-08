@@ -72,6 +72,7 @@ public class GUI extends JFrame {
                 int index = list.getSelectedIndex();
                 listModel.remove(index);
                 controller.remove(index);
+                backpackStat.setText(controller.backpackStat());
             } else {
                 JOptionPane.showMessageDialog(GUI.this,
                         "Select shape to delete first",
