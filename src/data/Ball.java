@@ -16,4 +16,14 @@ public class Ball extends Shape {
     public String toString() {
         return "Ball with radius " + radius + " and Volume " + RoundAvoid(getVolume(), 4);
     }
+
+    @Override
+    public String getType() {
+        return "Ball";
+    }
+
+    @Override
+    public double getEdge() {
+        return radius;
+    }
 }

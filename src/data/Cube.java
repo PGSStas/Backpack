@@ -16,4 +16,14 @@ public class Cube extends Shape {
     public String toString() {
         return "Cube with edge " + edge + " and Volume " + RoundAvoid(getVolume(), 4);
     }
+
+    @Override
+    public String getType() {
+        return "Cube";
+    }
+
+    @Override
+    public double getEdge() {
+        return edge;
+    }
 }

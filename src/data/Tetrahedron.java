@@ -16,4 +16,14 @@ public class Tetrahedron extends Shape {
     public String toString() {
         return "Tetrahedron with edge " + edge + " and Volume " + RoundAvoid(getVolume(), 4);
     }
+
+    @Override
+    public String getType() {
+        return "Tetrahedron";
+    }
+
+    @Override
+    public double getEdge() {
+        return edge;
+    }
 }

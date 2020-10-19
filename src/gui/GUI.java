@@ -5,9 +5,18 @@ import data.Ball;
 import data.Cube;
 import data.Shape;
 import data.Tetrahedron;
+import org.xml.sax.SAXException;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.awt.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 public class GUI extends JFrame {
@@ -36,6 +45,7 @@ public class GUI extends JFrame {
 
         createLayout(getContentPane());
         setElementsInfo();
+        setJMenuBar(createMenuBar());
     }
 
     private void createLayout(Container pane) {
@@ -92,23 +102,25 @@ public class GUI extends JFrame {
         String message = JOptionPane.showInputDialog(
                 GUI.this,
                 "<html><h1>Enter " + statuses[type] + " (non-negative number)");
-        if (message != null && isNumeric(message) && Integer.parseInt(message) >= 0) {
-            switch (type) {
-                case 0: {
-                    addToBackpack(new Cube(Integer.parseInt(message)));
-                    break;
+        if (message != null) {
+            if (isNumeric(message) && Integer.parseInt(message) >= 0) {
+                switch (type) {
+                    case 0: {
+                        addToBackpack(new Cube(Integer.parseInt(message)));
+                        break;
+                    }
+                    case 1: {
+                        addToBackpack(new Ball(Integer.parseInt(message)));
+                        break;
+                    }
+                    case 2: {
+                        addToBackpack(new Tetrahedron(Integer.parseInt(message)));
+                        break;
+                    }
                 }
-                case 1: {
-                    addToBackpack(new Ball(Integer.parseInt(message)));
-                    break;
-                }
-                case 2: {
-                    addToBackpack(new Tetrahedron(Integer.parseInt(message)));
-                    break;
-                }
+            } else {
+                inputError();
             }
-        } else {
-            inputError();
         }
     }
 
@@ -123,5 +135,90 @@ public class GUI extends JFrame {
                 "Seems, you enter something that is not a non-negative number :)",
                 "Error",
                 JOptionPane.ERROR_MESSAGE);
+    }
+
+    private JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(createFileMenu());
+        return menuBar;
+    }
+
+    private JMenu createFileMenu() {
+        JMenu menu = new JMenu("File");
+        JMenuItem load = new JMenuItem("Load");
+        JMenuItem save = new JMenuItem("Save");
+        menu.add(load);
+        menu.add(save);
+        load.addActionListener(actionEvent -> loadFile());
+        save.addActionListener(actionEvent -> saveFile());
+        return menu;
+    }
+
+    private void loadFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Load table to xml file");
+        FileNameExtensionFilter xmlFilter = new FileNameExtensionFilter("xml files (*.xml)", "xml");
+        fileChooser.addChoosableFileFilter(xmlFilter);
+        fileChooser.setFileFilter(xmlFilter);
+
+        int userSelection = fileChooser.showOpenDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            ArrayList<Shape> newListModel;
+            try {
+                newListModel = controller.loadFromXML(fileChooser.getSelectedFile());
+            } catch (IOException | SAXException | ParserConfigurationException e) {
+                JOptionPane.showMessageDialog(GUI.this,
+                        "Can`t read XML file (It can be corrupted or \"Backpack v0.1\" " +
+                                "have insufficient access rights)",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            listModel.clear();
+            for (Shape shape : newListModel) {
+                listModel.addElement(shape);
+            }
+
+            backpackStat.setText(controller.backpackStat());
+        }
+    }
+
+    private void saveFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save table to xml file");
+        FileNameExtensionFilter xmlFilter = new FileNameExtensionFilter("xml files (*.xml)", "xml");
+        fileChooser.addChoosableFileFilter(xmlFilter);
+        fileChooser.setFileFilter(xmlFilter);
+
+        int userSelection = fileChooser.showSaveDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            String s = fileChooser.getSelectedFile().getAbsolutePath();
+            if (s.length() <= 4 || !s.endsWith(".xml")) {
+                s += ".xml";
+            }
+            File file = new File(s);
+
+            try {
+                if (!file.createNewFile()) {
+                    PrintWriter writer = new PrintWriter(file);
+                    writer.print("");
+                    writer.close();
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(GUI.this,
+                        "Can`t create new XML file",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            try {
+                controller.saveToXML(file);
+            } catch (TransformerException | ParserConfigurationException | FileNotFoundException e) {
+                JOptionPane.showMessageDialog(GUI.this,
+                        "Can`t write data to this XML file",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 }
